@@ -1,0 +1,13 @@
+name: component-ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  component:
+    uses: ovx-labs/ov-ci/.github/workflows/reusable-component-ci.yml@main
+    with:
+      component: ov-genai-java
