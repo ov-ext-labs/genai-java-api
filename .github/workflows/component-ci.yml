@@ -8,6 +8,6 @@ on:
 
 jobs:
   component:
-    uses: ovx-labs/ov-ci/.github/workflows/reusable-component-ci.yml@main
+    uses: ovx-labs/ci/.github/workflows/reusable-component-ci.yml@main
     with:
-      component: ov-genai-java
+      component: genai-java-api

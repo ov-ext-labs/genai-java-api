@@ -1,4 +1,4 @@
-# ov-genai-java-api
+# genai-java-api
 
 OpenVINO GenAI Java/JNI wrapper workspace for `ovx-labs`.
 
