@@ -1,0 +1,4 @@
+interface:
+  display_name: "GenAI Java API"
+  short_description: "Work on the OpenVINO GenAI Java/JNI API."
+  default_prompt: "Use this skill when updating the genai-java-api repository, especially API docs, Android GFX packaging, native JNI mode selection, publication hygiene, or validation."

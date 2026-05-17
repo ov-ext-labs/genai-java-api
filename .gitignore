@@ -1,0 +1,21 @@
+.DS_Store
+.gradle/
+build/
+.internal-docs/
+.tmp/
+out/
+
+# Native/CMake build products
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+*.dylib
+*.so
+*.dll
+*.jnilib
+
+# IDE and local editor state
+.idea/
+.vscode/
+*.iml
