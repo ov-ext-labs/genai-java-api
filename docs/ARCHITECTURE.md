@@ -9,10 +9,13 @@
 - `LLMPipeline` wraps prompt and chat generation.
 - `ChatHistory`, `ChatMessage`, and `ChatRole` provide chat request construction.
 - `GenerationConfig` is a native-friendly map wrapper for OpenVINO GenAI generation parameters.
+- `PipelineProperties` is a native-friendly map wrapper for OpenVINO/OpenVINO GenAI pipeline properties such as `CACHE_DIR`, `ATTENTION_BACKEND`, `PERFORMANCE_HINT`, `ENABLE_MMAP`, and static prompt/response limits.
+- `GenerationPerfMetrics` reads the known native perf metric keys from `GenerationResult.perfMetrics()` while preserving the raw map for advanced consumers.
 - `Tokenizer` exposes chat-template application from an `LLMPipeline` tokenizer.
 - `ContinuousBatchingPipeline` and `GenerationHandle` define the async API surface, but the native bridge still treats those calls as pending implementation work.
+- `com.ovx.openvino.genai.android` contains Android integration helpers: runtime asset staging, native preload/plugin bootstrap, and shared asset-directory copy/read utilities.
 
-The Android convenience path defaults `LLMPipeline(String modelPath)` to `DeviceSelection.gfx()`. Use `LLMPipeline(String, DeviceSelection, Map<String, Object>)` when an application needs a different OpenVINO device or additional properties.
+The Android convenience path defaults `LLMPipeline(String modelPath)` to `DeviceSelection.gfx()`. Use `LLMPipeline(String, DeviceSelection, PipelineProperties)` when an application needs a different OpenVINO device or additional properties.
 
 ## Native Bridge Modes
 
@@ -41,6 +44,23 @@ OpenVinoGenAiRuntime.initialize(configuration);
 ```
 
 Library ordering is intentionally application-controlled because Android deployments often package OpenVINO, OpenVINO GenAI, plugin libraries, and `c++_shared` separately.
+
+On Android, `AndroidOpenVinoGenAiRuntime` is the convenience bootstrap around this same contract. It copies runtime metadata from packaged assets into app storage, mirrors plugin libraries where OpenVINO expects them, loads the preferred native libraries by absolute path, registers the requested device plugin, and initializes `OpenVinoGenAiRuntime`. `AndroidAssetBundle` is a small shared helper for reading and copying packaged asset directories; model selection, download policy, and cache invalidation remain application responsibilities.
+
+Pipeline properties are intentionally separate from runtime initialization. `RuntimeConfiguration` loads native libraries and registers plugins; `PipelineProperties` is passed into `LLMPipeline` and becomes the C++ `ov::AnyMap`. For example:
+
+```java
+PipelineProperties properties = PipelineProperties.builder()
+        .cacheDir(context.getCacheDir().toPath().resolve("openvino-genai").toString())
+        .attentionBackend(PipelineProperties.AttentionBackend.SDPA)
+        .performanceHint(PipelineProperties.PerformanceHint.LATENCY)
+        .enableMmap(true)
+        .build();
+
+LLMPipeline pipeline = new LLMPipeline(modelDir, DeviceSelection.gfx(), properties);
+```
+
+Use `DeviceSelection.gfx()` for Android GFX deployments. `AndroidPipelineProperties.cpuLatency(...)` is a separate preset for applications that explicitly choose CPU execution.
 
 ## Publication Boundary
 

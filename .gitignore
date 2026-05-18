@@ -19,3 +19,7 @@ compile_commands.json
 .idea/
 .vscode/
 *.iml
+
+# Python helper caches
+__pycache__/
+*.pyc

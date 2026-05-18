@@ -7,6 +7,7 @@ Java/JNI SDK surface for OpenVINO GenAI with an Android-first runtime path and e
 Current implementation focus:
 - Java API surface for `LLMPipeline`, chat history, generation configuration, tokenizer access, continuous batching, and generation handles
 - Android runtime bootstrap with explicit native preload ordering
+- Android asset staging helpers for packaged OpenVINO runtime/model assets
 - explicit `GFX` plugin registration for Android deployments
 - JNI bridge selection between a real OpenVINO GenAI bridge and a stub bridge for API-only builds
 
@@ -26,6 +27,8 @@ Currently implemented in `REAL` mode:
 - `getGenerationConfig` / `setGenerationConfig`
 - `getTokenizer`
 - `Tokenizer.applyChatTemplate`
+- typed `PipelineProperties` forwarding to the native OpenVINO GenAI `ov::AnyMap`
+- `GenerationPerfMetrics` convenience accessors for generated-token, TTFT, TPOT, and throughput metrics
 
 Still stubbed:
 - `ContinuousBatchingPipeline`
@@ -56,6 +59,21 @@ RuntimeConfiguration configuration = RuntimeConfiguration.builder()
 
 OpenVinoGenAiRuntime.initialize(configuration);
 ```
+
+Pipeline options are configured per pipeline, not at runtime bootstrap:
+
+```java
+PipelineProperties properties = PipelineProperties.builder()
+        .cacheDir(context.getCacheDir().toPath().resolve("openvino-genai").toString())
+        .attentionBackend(PipelineProperties.AttentionBackend.SDPA)
+        .performanceHint(PipelineProperties.PerformanceHint.LATENCY)
+        .enableMmap(true)
+        .build();
+
+LLMPipeline pipeline = new LLMPipeline(modelDir, DeviceSelection.gfx(), properties);
+```
+
+Android applications can use `AndroidOpenVinoGenAiRuntime` to stage packaged runtime metadata, preload native libraries, register the device plugin, and initialize the Java API bridge. `AndroidAssetBundle` provides the shared asset-directory copy/read helpers used by Android integrations; application code remains responsible for choosing and downloading model bundles. `AndroidPipelineProperties.cpuLatency(...)` is available when an app intentionally runs a CPU pipeline.
 
 ## Build Examples
 

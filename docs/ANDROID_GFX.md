@@ -52,6 +52,20 @@ adb shell 'cd /data/local/tmp/ov_genai_android && export LD_LIBRARY_PATH=$PWD &&
 
 The runner first calls `Core.compile_model(..., "GFX")`, then creates `ov::genai::LLMPipeline` on `GFX`, reads the generation config, and performs one generation request.
 
+## Stage Runtime Assets
+
+Packaged Android applications can stage OpenVINO runtime metadata into an app asset directory before building the APK:
+
+```bash
+tools/stage_android_runtime_assets.py \
+  --package-dir /path/to/openvino-android-package \
+  --abi arm64-v8a \
+  --package-name openvino-android-2026.1.0 \
+  --output build/android/assets/openvino-runtime
+```
+
+The script looks for an installed `plugins.xml` under the package runtime or Android JNI layout and copies it into the output tree. If no plugin XML is present, it creates a minimal CPU plugin XML only when the package contains `libopenvino_arm_cpu_plugin.so`; GFX packages should provide their own plugin XML so the staged metadata matches the packaged plugin set.
+
 ## App Integration
 
 Package native libraries in the same relative location expected by the app, then initialize:
@@ -66,6 +80,21 @@ RuntimeConfiguration configuration = RuntimeConfiguration.builder()
         .build();
 
 OpenVinoGenAiRuntime.initialize(configuration);
+```
+
+Applications that package runtime metadata in assets can use `AndroidOpenVinoGenAiRuntime.prepare(context)` instead of hand-writing the preload sequence. It copies `assets/openvino-runtime` into app storage, mirrors OpenVINO plugin libraries where the runtime expects them, loads native libraries by absolute path, registers the selected plugin, and initializes `OpenVinoGenAiRuntime`.
+
+For per-pipeline options, pass `PipelineProperties` into `LLMPipeline`:
+
+```java
+PipelineProperties properties = PipelineProperties.builder()
+        .cacheDir(context.getCacheDir().toPath().resolve("openvino-genai").toString())
+        .attentionBackend(PipelineProperties.AttentionBackend.SDPA)
+        .performanceHint(PipelineProperties.PerformanceHint.LATENCY)
+        .enableMmap(true)
+        .build();
+
+LLMPipeline pipeline = new LLMPipeline(modelDir, DeviceSelection.gfx(), properties);
 ```
 
 Use `DeviceSelection.gfx()` for the active Android path unless a task explicitly requires another OpenVINO device.

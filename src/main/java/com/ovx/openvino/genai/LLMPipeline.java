@@ -10,7 +10,11 @@ public final class LLMPipeline extends NativeResource {
     private final Object generationLock = new Object();
 
     public LLMPipeline(String modelPath) {
-        this(modelPath, DeviceSelection.gfx(), Map.of());
+        this(modelPath, DeviceSelection.gfx(), PipelineProperties.empty());
+    }
+
+    public LLMPipeline(String modelPath, DeviceSelection device, PipelineProperties properties) {
+        this(modelPath, device, properties == null ? Map.of() : properties.toMap());
     }
 
     public LLMPipeline(String modelPath, DeviceSelection device, Map<String, Object> properties) {

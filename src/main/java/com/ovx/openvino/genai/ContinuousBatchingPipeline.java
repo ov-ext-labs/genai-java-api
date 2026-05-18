@@ -11,6 +11,14 @@ public final class ContinuousBatchingPipeline extends NativeResource {
             String modelPath,
             SchedulerConfig schedulerConfig,
             DeviceSelection device,
+            PipelineProperties properties) {
+        this(modelPath, schedulerConfig, device, properties == null ? Map.of() : properties.toMap());
+    }
+
+    public ContinuousBatchingPipeline(
+            String modelPath,
+            SchedulerConfig schedulerConfig,
+            DeviceSelection device,
             Map<String, Object> properties) {
         super(
                 NativeBindings.cbCreate(
